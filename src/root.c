@@ -247,7 +247,7 @@ int pixel6_root(struct rw_info *rw) {
 int root(struct rw_info *rw) {
     LOG("\n[x] Success! Time to root\n");
 
-    if (is_device("Google Pixel 6")) {
+    if (is_device("Google Pixel 6a")) {
         return pixel6_root(rw);
     }
 
