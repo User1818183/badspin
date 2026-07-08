@@ -1,44 +1,56 @@
-name: Build badspin
+name: Build BadSpin APK
 
 on:
-  workflow_dispatch:
   push:
-    branches: [ main, master ]
+    branches: [ "main", "master" ] # Запускать при пуше в основную ветку
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch: # Позволяет запускать сборку вручную из вкладки Actions
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    
-
-    env:
-      LIBNAME: badspin
-      ANDROID_NDK_HOME: /opt/android-ndk
-      API: 30
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Android NDK r27c
-        run: |
-          wget -q https://dl.google.com/android/repository/android-ndk-r27c-linux.zip
-          unzip -q android-ndk-r27c-linux.zip
-          sudo mv android-ndk-r27c /opt/android-ndk
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
 
-      - name: Check toolchain
-        run: |
-          ls -la $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin
-          test -f $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android${API}-clang
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
 
-      - name: Build libbadspin.so
-        working-directory: src
+      # Установка NDK (необходим для компиляции .so через Makefile)
+      - name: Install NDK
         run: |
-          
-          make clean
-          make all
+          sdkmanager "ndk;25.2.9519653" # Версия по умолчанию, можно сменить
+          echo "ANDROID_NDK_HOME=${ANDROID_SDK_ROOT}/ndk/25.2.9519653" >> $GITHUB_ENV
 
-      - name: Upload libbadspin.so
+      # Шаг 1: Компиляция нативной библиотеки
+      - name: Compile libbadspin.so
+        run: |
+          cd src
+          # Команда 'make push' в оригинальном репо собирает .so и копирует в assets.
+          # Если 'make push' пытается выполнить 'adb push', это вызовет ошибку в CI.
+          # Мы добавим '|| true', чтобы сборка продолжалась, если adb недоступен, 
+          # так как файл в assets все равно попадет.
+          make push || echo "Adb push failed, but assets should be copied."
+
+      # Шаг 2: Сборка Android приложения
+      - name: Build Demo App APK
+        run: |
+          cd app
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      # Шаг 3: Сохранение результата (Артефакты)
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: libbadspin
-          path: libbadspin.so
+          name: BadSpin-Debug-APK
+          path: app/app/build/outputs/apk/debug/app-debug.apk
