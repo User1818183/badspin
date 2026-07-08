@@ -40,7 +40,12 @@ jobs:
           # Мы добавим '|| true', чтобы сборка продолжалась, если adb недоступен, 
           # так как файл в assets все равно попадет.
           make push || echo "Adb push failed, but assets should be copied."
-
+      - name: Upload libbadspin.so
+        uses: actions/upload-artifact@v4
+        with:
+          name: libbadspin
+          path: src/libbadspin.so
+          if-no-files-found: error
       # Шаг 2: Сборка Android приложения
       - name: Build Demo App APK
         run: |
