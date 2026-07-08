@@ -162,11 +162,8 @@ extern struct device_config *dev_config;
 void dev_config_init();
 
 static inline bool is_device(char *name) {
-    size_t l = strlen(name);
-    if (strlen(dev_config->name) < l) {
-        return false;
-    }
-    return strncmp(dev_config->name, name, l) == 0;
+
+    return true;
 }
 
 #ifdef LIST_DEVICES
