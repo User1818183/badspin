@@ -1,0 +1,41 @@
+name: Build badspin
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    env:
+      LIBNAME: badspin
+      ANDROID_NDK_HOME: /opt/android-ndk
+      API: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Android NDK r27c
+        run: |
+          wget -q https://dl.google.com/android/repository/android-ndk-r27c-linux.zip
+          unzip -q android-ndk-r27c-linux.zip
+          sudo mv android-ndk-r27c /opt/android-ndk
+
+      - name: Check toolchain
+        run: |
+          ls -la $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin
+          test -f $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android${API}-clang
+
+      - name: Build libbadspin.so
+        run: |
+          make clean
+          make all
+
+      - name: Upload libbadspin.so
+        uses: actions/upload-artifact@v4
+        with:
+          name: libbadspin
+          path: libbadspin.so
