@@ -8,6 +8,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    
 
     env:
       LIBNAME: badspin
@@ -30,7 +31,9 @@ jobs:
           test -f $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android${API}-clang
 
       - name: Build libbadspin.so
+        working-directory: src
         run: |
+          
           make clean
           make all
 
